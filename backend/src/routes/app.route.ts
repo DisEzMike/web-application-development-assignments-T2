@@ -22,7 +22,7 @@ router.post("/login", (req, res) => {
 // List Notes
 router.get("/notes", async (req, res) => {
     const page = req.query.page || 1;
-    const response = await fetch(`${POCKETHOST_URL}?page=${page}`);
+    const response = await fetch(`${POCKETHOST_URL}?page=${page}&sort=-created`);
     const data: NoteResponse = await response.json();
     res.json(data);
 });
