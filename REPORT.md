@@ -28,8 +28,17 @@ This project uses React, so the screen is updated through the Virtual DOM approa
 In this implementation:
 - `notes` state updates after `fetchNotes`, so the note list UI updates.
 - `isLoggedIn` controls conditional rendering of the Auth section.
-- `isFetchingNotes`, `isLoggingIn`, and `isCreating` toggle loading text/buttons.
-- `createError` conditionally renders validation feedback under the create form.
+- `isFetchingNotes`, `isLoggingIn`, `isCreating`, `isUpdating`, and `isDeleting` toggle loading text/buttons.
+- `createError` and `detailError` conditionally render validation feedback.
+- `selectedNote` state controls the visibility and content of the edit modal dialog.
+- `editTitle` and `editContent` state manage form input in the modal.
+
+The edit modal demonstrates Virtual DOM efficiency:
+- Clicking "View" on a note sets `selectedNote` state.
+- React renders a fixed-position modal with backdrop blur effect.
+- Form input changes update `editTitle` and `editContent` without re-fetching from server.
+- On update/delete, the modal closes and the notes list refreshes.
+- The modal is responsive, adapting layout and text sizing based on screen size using Tailwind's `sm:` breakpoints.
 
 This is more efficient and maintainable than manually manipulating DOM nodes.
 

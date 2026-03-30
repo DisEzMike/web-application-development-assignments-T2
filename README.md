@@ -129,12 +129,3 @@ Base URL: `http://localhost:3000/api`
 
 - `DELETE /notes/:id` (requires Authorization header)
   - Deletes a note by id.
-
-## Backend Auth Behavior (Current Code)
-
-- Login route signs JWT with `JWT_SECRET`.
-- Middleware verifies JWT with `JWT_SECRET`.
-- Protected routes:
-  - `POST /api/notes`
-  - `PATCH /api/notes/:id`
-  - `DELETE /api/notes/:id`
