@@ -6,6 +6,17 @@ dotenv.config();
 const app: Application = express();
 const port: number = parseInt(process.env.PORT || '3000', 10);
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// CORS Middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
+});
+
 app.get('/', (_req: Request, res: Response) => {
   res.json({ message: 'Hello, SecureNote API!' });
 });

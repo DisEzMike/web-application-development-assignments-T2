@@ -1,9 +1,13 @@
-import { assert } from "node:console";
+const getEnv = (name: string): string => {
+    const value = process.env[name];
+    if (!value) {
+        throw new Error(`${name} is not defined in environment variables`);
+    }
+    return value;
+};
 
-const POCKETHOST_URL = process.env.POCKETHOST_URL;
-assert(POCKETHOST_URL, 'POCKETHOST_URL is not defined in environment variables');
+const POCKETHOST_URL = getEnv('POCKETHOST_URL');
+const SECRET_TOKEN = getEnv('SECRET_TOKEN');
+const USERID = getEnv('USER_ID');
 
-const SECRET_TOKEN = process.env.SECRET_TOKEN;
-assert(SECRET_TOKEN, 'SECRET_TOKEN is not defined in environment variables');
-
-export { POCKETHOST_URL, SECRET_TOKEN };
+export { POCKETHOST_URL, SECRET_TOKEN, USERID };
