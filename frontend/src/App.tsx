@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { FiArrowLeft, FiArrowRight, FiCalendar, FiFileText, FiLogIn, FiLogOut, FiPlus, FiRefreshCw, FiShield, FiUser } from 'react-icons/fi'
+import { FiArrowLeft, FiArrowRight, FiCalendar, FiEdit, FiFileText, FiLogIn, FiLogOut, FiPlus, FiRefreshCw, FiShield, FiTrash2, FiUser, FiX } from 'react-icons/fi'
 
 type Note = {
   id: string
@@ -33,6 +33,13 @@ function App() {
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [createError, setCreateError] = useState('')
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editContent, setEditContent] = useState('')
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [detailError, setDetailError] = useState('')
 
   const isLoggedIn = useMemo(() => token.length > 0, [token])
 
@@ -135,6 +142,122 @@ function App() {
   const handleLogout = () => {
     setToken('')
     localStorage.removeItem('token')
+  }
+
+  const handleViewNote = async (noteId: string) => {
+    setIsLoadingDetail(true)
+    setDetailError('')
+
+    try {
+      const response = await fetch(`${API_BASE}/notes/${noteId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        setDetailError((data as { message?: string }).message || 'Failed to load note')
+        return
+      }
+
+      setSelectedNote(data as Note)
+      setEditTitle(data.title)
+      setEditContent(data.content)
+    } catch {
+      setDetailError('Failed to load note')
+    } finally {
+      setIsLoadingDetail(false)
+    }
+  }
+
+  const handleUpdateNote = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!selectedNote) return
+
+    setDetailError('')
+    const trimmedTitle = editTitle.trim()
+    const trimmedContent = editContent.trim()
+
+    if (!trimmedTitle) {
+      setDetailError('Please enter a title')
+      return
+    }
+
+    if (!trimmedContent) {
+      setDetailError('Please enter content')
+      return
+    }
+
+    setIsUpdating(true)
+
+    try {
+      const response = await fetch(`${API_BASE}/notes/${selectedNote.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title: trimmedTitle, content: trimmedContent }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        setDetailError(data.message || 'Update failed')
+        return
+      }
+
+      setSelectedNote(null)
+      setEditTitle('')
+      setEditContent('')
+      fetchNotes(currentPage)
+    } catch {
+      setDetailError('Update request failed')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleDeleteNote = async () => {
+    if (!selectedNote) return
+
+    if (!confirm('Are you sure you want to delete this note?')) {
+      return
+    }
+
+    setIsDeleting(true)
+    setDetailError('')
+
+    try {
+      const response = await fetch(`${API_BASE}/notes/${selectedNote.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        setDetailError(data.message || 'Delete failed')
+        return
+      }
+
+      setSelectedNote(null)
+      setEditTitle('')
+      setEditContent('')
+      fetchNotes(currentPage)
+    } catch {
+      setDetailError('Delete request failed')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleCloseNote = () => {
+    setSelectedNote(null)
+    setEditTitle('')
+    setEditContent('')
+    setDetailError('')
   }
 
   return (
@@ -265,21 +388,105 @@ function App() {
             <li key={note.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
               <h3 className="m-0 text-base font-semibold text-slate-900">{note.title}</h3>
               <p className="my-2 overflow-x-auto whitespace-pre-wrap text-sm text-slate-700">{note.content}</p>
-              <small className="inline-flex items-center gap-3 text-xs text-slate-500">
-                <span className="inline-flex items-center gap-1">
-                  <FiUser />
-                  user {note.user_id}
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <FiCalendar />
-                  {new Date(note.created).toLocaleString()}
-                </span>
-              </small>
+              <div className="flex items-center justify-between gap-2">
+                <small className="inline-flex items-center gap-3 text-xs text-slate-500">
+                  <span className="inline-flex items-center gap-1">
+                    <FiUser />
+                    user {note.user_id}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <FiCalendar />
+                    {new Date(note.created).toLocaleString()}
+                  </span>
+                </small>
+                {isLoggedIn && (
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-3 py-1 text-xs font-medium text-white hover:bg-slate-800"
+                    onClick={() => handleViewNote(note.id)}
+                  >
+                    <FiFileText className="text-xs" />
+                    View
+                  </button>
+                )}
+              </div>
             </li>
           ))}
           {notes.length === 0 && <li className="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-500">No notes yet</li>}
         </ul>
       </section>
+
+      {selectedNote && (
+        <section className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-xs p-3 sm:p-4">
+          <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-4 shadow-2xl sm:max-w-2xl sm:p-6">
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900 sm:text-lg">
+                <FiEdit className="text-slate-700" />
+                Edit Note
+              </h2>
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-200 px-2 py-2 font-medium text-slate-900 hover:bg-slate-300 sm:px-3"
+                onClick={handleCloseNote}
+              >
+                <FiX />
+              </button>
+            </div>
+
+            {isLoadingDetail && <p className="text-sm text-slate-500">Loading note...</p>}
+
+            {!isLoadingDetail && (
+              <form className="grid gap-4 sm:gap-5" onSubmit={handleUpdateNote}>
+                <div>
+                  <label className="mb-2 block text-xs font-medium text-slate-700 sm:text-sm">Title</label>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500 sm:text-base"
+                    value={editTitle}
+                    onChange={(event) => setEditTitle(event.target.value)}
+                    placeholder="title"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-medium text-slate-700 sm:text-sm">Content</label>
+                  <textarea
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500 sm:text-base"
+                    value={editContent}
+                    onChange={(event) => setEditContent(event.target.value)}
+                    placeholder="content"
+                    rows={4}
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <button
+                    type="submit"
+                    className="order-1 inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:order-none sm:text-base"
+                    disabled={isUpdating || isDeleting}
+                  >
+                    <FiEdit />
+                    {isUpdating ? 'Updating...' : 'Update'}
+                  </button>
+                  <button
+                    type="button"
+                    className="order-2 inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50 sm:order-none sm:text-base"
+                    onClick={handleDeleteNote}
+                    disabled={isUpdating || isDeleting}
+                  >
+                    <FiTrash2 />
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+
+                {detailError && (
+                  <p className="rounded-lg border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">{detailError}</p>
+                )}
+              </form>
+            )}
+          </div>
+        </section>
+      )}
 
     </main>
   )
