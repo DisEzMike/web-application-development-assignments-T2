@@ -8,6 +8,7 @@ const getEnv = (name: string): string => {
 
 const POCKETHOST_URL = getEnv('POCKETHOST_URL');
 const SECRET_TOKEN = getEnv('SECRET_TOKEN');
+const JWT_SECRET = getEnv('JWT_SECRET');
 const USERID = getEnv('USER_ID');
 
-export { POCKETHOST_URL, SECRET_TOKEN, USERID };
+export { POCKETHOST_URL, SECRET_TOKEN, USERID, JWT_SECRET };

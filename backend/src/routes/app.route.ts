@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { POCKETHOST_URL, SECRET_TOKEN, USERID } from "../utils/contants";
+import { JWT_SECRET, POCKETHOST_URL, SECRET_TOKEN, USERID } from "../utils/contants";
 import { authenticate } from "../middleware/auth";
 import jwt from 'jsonwebtoken';
 import { NoteItem, NoteResponse } from "../utils/type";
@@ -15,7 +15,7 @@ router.post("/login", (req, res) => {
     }
 
     const payload = { username };
-    const token = jwt.sign(payload, SECRET_TOKEN);
+    const token = jwt.sign(payload, JWT_SECRET);
     res.json({ token });
 });
 
@@ -95,7 +95,7 @@ router.patch("/notes/:id", authenticate, async (req, res) => {
             body: JSON.stringify({
                 title,
                 content,
-                user_id: process.env.USERID
+                user_id: USERID
             })
         }
         const response = await fetch(`${POCKETHOST_URL}/${req.params.id}`, options);
