@@ -1,6 +1,10 @@
 import type { FormEvent } from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { FiArrowLeft, FiArrowRight, FiCalendar, FiEdit, FiFileText, FiLogIn, FiLogOut, FiPlus, FiRefreshCw, FiShield, FiTrash2, FiUser, FiX } from 'react-icons/fi'
+import { 
+  FiArrowLeft, FiArrowRight, FiEdit, FiFileText, FiLogIn, FiLogOut, 
+  FiPlus, FiRefreshCw, FiLock, FiTrash2, FiUser, FiX, FiChevronRight, FiCheckCircle,
+  FiClock, FiLayers
+} from 'react-icons/fi'
 
 type Note = {
   id: string
@@ -261,233 +265,316 @@ function App() {
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-4xl p-4 sm:p-6">
-      <header className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between gap-2">
-          <h1 className="m-0 flex items-center gap-2 text-2xl font-bold tracking-tight text-slate-900">
-            <FiFileText className="text-slate-700" />
-            SecureNote
-          </h1>
+    <main className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
+      {/* Header */}
+      <header className="border-b border-slate-100 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-6 sm:px-6 sm:py-8">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 p-2.5 text-white">
+              <FiFileText className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="m-0 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">SecureNote</h1>
+            </div>
+          </div>
           {isLoggedIn && (
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-lg bg-slate-200 px-4 py-2 font-medium text-slate-900 hover:bg-slate-300"
+              className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-200 sm:gap-3 sm:px-5 sm:py-2.5 sm:text-base"
               onClick={handleLogout}
             >
-              <FiLogOut />
-              Logout
+              <FiLogOut className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden sm:inline">Logout</span>
             </button>
           )}
         </div>
       </header>
 
-      {!isLoggedIn && (
-        <section className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-slate-900">
-            <FiShield className="text-slate-700" />
-            Auth
-          </h2>
-          <form className="flex flex-col gap-2 sm:flex-row" onSubmit={handleLogin}>
-            <input
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              placeholder="username"
-              required
-            />
-            <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-800">
-              <FiLogIn />
-              {isLoggingIn ? 'Logging in...' : 'Login'}
-            </button>
-          </form>
-          <small className="mt-2 block text-xs text-slate-500">Not logged in</small>
-        </section>
-      )}
-
-      <section className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-slate-900">
-          <FiPlus className="text-slate-700" />
-          Create note
-        </h2>
-        <form className="grid gap-2" onSubmit={handleCreateNote}>
-          <input
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder="title"
-            required
-          />
-          <textarea
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500"
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-            placeholder="content"
-            rows={4}
-            required
-          />
-          <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-800">
-            <FiPlus />
-            {isCreating ? 'Creating...' : 'Create'}
-          </button>
-        </form>
-        {createError && (
-          <p className="mt-2 rounded-lg border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">{createError}</p>
-        )}
-      </section>
-
-      <section className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-            <FiFileText className="text-slate-700" />
-            Notes
-          </h2>
-          <button
-            className="inline-flex items-center gap-2 rounded-lg bg-slate-200 px-4 py-2 font-medium text-slate-900 hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={() => fetchNotes(currentPage)}
-            disabled={isFetchingNotes}
-          >
-            <FiRefreshCw className={isFetchingNotes ? 'animate-spin' : ''} />
-            {isFetchingNotes ? 'Loading...' : 'Refresh'}
-          </button>
-        </div>
-
-        <div className="mb-3 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-          <span>
-            Page {currentPage} / {totalPages}
-          </span>
-          <span>{totalItems} total items</span>
-        </div>
-
-        <div className="mb-3 flex gap-2">
-          <button
-            type="button"
-            className="inline-flex items-center gap-1 rounded-lg bg-slate-200 px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={() => fetchNotes(currentPage - 1)}
-            disabled={isFetchingNotes || currentPage <= 1}
-          >
-            <FiArrowLeft />
-            Previous
-          </button>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1 rounded-lg bg-slate-200 px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={() => fetchNotes(currentPage + 1)}
-            disabled={isFetchingNotes || currentPage >= totalPages}
-          >
-            Next
-            <FiArrowRight />
-          </button>
-        </div>
-
-        {isFetchingNotes && (
-          <p className="mb-3 text-sm text-slate-500">Fetching notes...</p>
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+        {/* Auth Section */}
+        {!isLoggedIn && (
+          <div className="mb-8">
+            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="rounded-lg bg-blue-100 p-2 text-blue-600">
+                  <FiLock className="h-5 w-5" />
+                </div>
+                <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">Sign In</h2>
+              </div>
+              <form className="flex flex-col gap-3 sm:flex-row sm:gap-3" onSubmit={handleLogin}>
+                <input
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition-all placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:outline-none sm:text-base"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  placeholder="Enter your username"
+                  required
+                />
+                <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-blue-700 disabled:opacity-50 sm:whitespace-nowrap sm:text-base">
+                  <FiLogIn className="h-4 w-4" />
+                  {isLoggingIn ? 'Signing in...' : 'Sign in'}
+                </button>
+              </form>
+              {!isLoggingIn && <p className="mt-4 text-xs text-slate-500">No account? We'll create one for you!</p>}
+            </div>
+          </div>
         )}
 
-        <ul className="grid max-h-96 gap-2 overflow-y-auto pr-1">
-          {notes.map((note) => (
-            <li key={note.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <h3 className="m-0 text-base font-semibold text-slate-900">{note.title}</h3>
-              <p className="my-2 line-clamp-2 break-all whitespace-pre-wrap text-sm text-slate-700">{note.content}</p>
-              <div className="flex items-center justify-between gap-2">
-                <small className="inline-flex items-center gap-3 text-xs text-slate-500">
-                  <span className="inline-flex items-center gap-1">
-                    <FiUser />
-                    user {note.user_id}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <FiCalendar />
-                    {new Date(note.created).toLocaleString()}
-                  </span>
-                </small>
-                {isLoggedIn && (
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-3 py-1 text-xs font-medium text-white hover:bg-slate-800"
-                    onClick={() => handleViewNote(note.id)}
-                  >
-                    <FiFileText className="text-xs" />
-                    View
+        {isLoggedIn && (
+          <>
+            {/* Create Note Section */}
+            <div className="mb-8">
+              <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="rounded-lg bg-green-100 p-2 text-green-600">
+                    <FiPlus className="h-5 w-5" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">New Note</h2>
+                </div>
+                <form className="space-y-4" onSubmit={handleCreateNote}>
+                  <div>
+                    <input
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition-all placeholder:text-slate-400 focus:border-green-400 focus:bg-white focus:outline-none sm:text-base"
+                      value={title}
+                      onChange={(event) => setTitle(event.target.value)}
+                      placeholder="Title..."
+                      required
+                    />
+                  </div>
+                  <div>
+                    <textarea
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition-all placeholder:text-slate-400 focus:border-green-400 focus:bg-white focus:outline-none sm:text-base"
+                      value={content}
+                      onChange={(event) => setContent(event.target.value)}
+                      placeholder="Write your thoughts..."
+                      rows={4}
+                      required
+                    />
+                  </div>
+                  <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-green-700 disabled:opacity-50 sm:text-base">
+                    <FiPlus className="h-4 w-4" />
+                    {isCreating ? 'Creating...' : 'Create Note'}
                   </button>
+                </form>
+                {createError && (
+                  <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                    <p className="m-0 font-medium">Error</p>
+                    <p className="m-0 mt-1">{createError}</p>
+                  </div>
                 )}
               </div>
-            </li>
-          ))}
-          {notes.length === 0 && <li className="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-500">No notes yet</li>}
-        </ul>
-      </section>
+            </div>
+          </>
+        )}
 
-      {selectedNote && (
-        <section className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-xs p-3 sm:p-4">
-          <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-4 shadow-2xl sm:max-w-2xl sm:p-6">
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900 sm:text-lg">
-                <FiEdit className="text-slate-700" />
-                Edit Note
-              </h2>
+        {/* Notes Section */}
+        <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <div className="border-b border-slate-100 px-6 py-6 sm:px-8 sm:py-8">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-purple-100 p-2 text-purple-600">
+                  <FiLayers className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">Your Notes</h2>
+                  <p className="m-0 mt-1 text-xs text-slate-500 sm:text-sm">{totalItems} note{totalItems !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
               <button
-                type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-200 px-2 py-2 font-medium text-slate-900 hover:bg-slate-300 sm:px-3"
-                onClick={handleCloseNote}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-200 disabled:opacity-50 sm:px-5 sm:py-2.5 sm:text-base"
+                onClick={() => fetchNotes(currentPage)}
+                disabled={isFetchingNotes}
               >
-                <FiX />
+                <FiRefreshCw className={`h-4 w-4 sm:h-5 sm:w-5 ${isFetchingNotes ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Refresh</span>
               </button>
             </div>
+          </div>
 
-            {isLoadingDetail && <p className="text-sm text-slate-500">Loading note...</p>}
-
-            {!isLoadingDetail && (
-              <form className="grid gap-4 sm:gap-5" onSubmit={handleUpdateNote}>
-                <div>
-                  <label className="mb-2 block text-xs font-medium text-slate-700 sm:text-sm">Title</label>
-                  <input
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500 sm:text-base"
-                    value={editTitle}
-                    onChange={(event) => setEditTitle(event.target.value)}
-                    placeholder="title"
-                    required
-                  />
+          <div className="space-y-3 px-6 py-6 sm:px-8 sm:py-8">
+            {isFetchingNotes ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600"></div>
+                  <p className="text-sm text-slate-500">Loading notes...</p>
                 </div>
-                <div>
-                  <label className="mb-2 block text-xs font-medium text-slate-700 sm:text-sm">Content</label>
-                  <textarea
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500 sm:text-base"
-                    value={editContent}
-                    onChange={(event) => setEditContent(event.target.value)}
-                    placeholder="content"
-                    rows={4}
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <button
-                    type="submit"
-                    className="order-1 inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:order-none sm:text-base"
-                    disabled={isUpdating || isDeleting}
+              </div>
+            ) : notes.length > 0 ? (
+              <div className="space-y-3">
+                {notes.map((note) => (
+                  <div
+                    key={note.id}
+                    className="group relative rounded-lg border border-slate-100 bg-gradient-to-br from-slate-50 to-slate-100 p-4 transition-all hover:border-slate-200 hover:shadow-md sm:p-5"
                   >
-                    <FiEdit />
-                    {isUpdating ? 'Updating...' : 'Update'}
-                  </button>
-                  <button
-                    type="button"
-                    className="order-2 inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50 sm:order-none sm:text-base"
-                    onClick={handleDeleteNote}
-                    disabled={isUpdating || isDeleting}
-                  >
-                    <FiTrash2 />
-                    {isDeleting ? 'Deleting...' : 'Delete'}
-                  </button>
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <h3 className="m-0 font-semibold text-slate-900 sm:text-lg">{note.title}</h3>
+                        <p className="m-0 mt-2 line-clamp-2 break-all text-sm text-slate-600 sm:mt-1.5">{note.content}</p>
+                      </div>
+                      {isLoggedIn && (
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center rounded-lg bg-white p-2 text-slate-400 transition-all hover:bg-blue-50 hover:text-blue-600 sm:p-2.5"
+                          onClick={() => handleViewNote(note.id)}
+                          title="View and edit"
+                        >
+                          <FiChevronRight className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2 border-t border-slate-200 pt-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                      <div className="flex items-center gap-4">
+                        <span className="inline-flex items-center gap-1.5">
+                          <FiUser className="h-3.5 w-3.5" />
+                          User {note.user_id}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <FiClock className="h-3.5 w-3.5" />
+                          {new Date(note.created).toLocaleDateString()} {new Date(note.created).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="rounded-lg bg-slate-100 p-3 text-slate-400">
+                  <FiFileText className="h-8 w-8" />
                 </div>
-
-                {detailError && (
-                  <p className="rounded-lg border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">{detailError}</p>
-                )}
-              </form>
+                <p className="mt-4 text-sm text-slate-500">No notes yet. Create your first one!</p>
+              </div>
             )}
           </div>
-        </section>
-      )}
 
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="border-t border-slate-100 px-6 py-6 sm:px-8 sm:py-8">
+              <div className="mb-4 flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                <span className="font-medium">Page {currentPage} of {totalPages}</span>
+                <span className="text-xs">{totalItems} total items</span>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
+                  onClick={() => fetchNotes(currentPage - 1)}
+                  disabled={isFetchingNotes || currentPage <= 1}
+                >
+                  <FiArrowLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline">Previous</span>
+                </button>
+                <button
+                  type="button"
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
+                  onClick={() => fetchNotes(currentPage + 1)}
+                  disabled={isFetchingNotes || currentPage >= totalPages}
+                >
+                  <span className="hidden sm:inline">Next</span>
+                  <FiArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal - Edit Note */}
+      {selectedNote && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-2xl border border-slate-100 bg-white shadow-2xl">
+            {/* Modal Header */}
+            <div className="border-b border-slate-100 px-6 py-6 sm:px-8 sm:py-8">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-amber-100 p-2 text-amber-600">
+                    <FiEdit className="h-5 w-5" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Edit Note</h2>
+                </div>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center rounded-lg bg-slate-100 p-2 text-slate-600 transition-all hover:bg-slate-200 sm:p-2.5"
+                  onClick={handleCloseNote}
+                  title="Close"
+                >
+                  <FiX className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="px-6 py-6 sm:px-8 sm:py-8">
+              {isLoadingDetail ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600"></div>
+                    <p className="text-sm text-slate-500">Loading...</p>
+                  </div>
+                </div>
+              ) : (
+                <form className="space-y-6" onSubmit={handleUpdateNote}>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Title</label>
+                    <input
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition-all placeholder:text-slate-400 focus:border-amber-400 focus:bg-white focus:outline-none sm:text-base"
+                      value={editTitle}
+                      onChange={(event) => setEditTitle(event.target.value)}
+                      placeholder="Note title"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">Content</label>
+                    <textarea
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition-all placeholder:text-slate-400 focus:border-amber-400 focus:bg-white focus:outline-none sm:text-base"
+                      value={editContent}
+                      onChange={(event) => setEditContent(event.target.value)}
+                      placeholder="Note content"
+                      rows={6}
+                      required
+                    />
+                  </div>
+
+                  {detailError && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                      <p className="m-0 font-medium">Error</p>
+                      <p className="m-0 mt-1">{detailError}</p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                    <button
+                      type="button"
+                      className="rounded-lg border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 disabled:opacity-50 sm:text-base"
+                      onClick={handleCloseNote}
+                      disabled={isUpdating || isDeleting}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-red-700 disabled:opacity-50 sm:text-base"
+                      onClick={handleDeleteNote}
+                      disabled={isUpdating || isDeleting}
+                    >
+                      <FiTrash2 className="h-4 w-4" />
+                      {isDeleting ? 'Deleting...' : 'Delete'}
+                    </button>
+                    <button
+                      type="submit"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-amber-700 disabled:opacity-50 sm:text-base"
+                      disabled={isUpdating || isDeleting}
+                    >
+                      <FiCheckCircle className="h-4 w-4" />
+                      {isUpdating ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
