@@ -387,7 +387,7 @@ function App() {
           {notes.map((note) => (
             <li key={note.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
               <h3 className="m-0 text-base font-semibold text-slate-900">{note.title}</h3>
-              <p className="my-2 overflow-x-auto whitespace-pre-wrap text-sm text-slate-700">{note.content}</p>
+              <p className="my-2 line-clamp-2 break-all whitespace-pre-wrap text-sm text-slate-700">{note.content}</p>
               <div className="flex items-center justify-between gap-2">
                 <small className="inline-flex items-center gap-3 text-xs text-slate-500">
                   <span className="inline-flex items-center gap-1">
