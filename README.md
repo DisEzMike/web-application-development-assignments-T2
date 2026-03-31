@@ -1,131 +1,112 @@
-# SecureNote
+# SecureNote Web Application
 
-A full-stack note management application built with:
-- Backend: Node.js + Express + TypeScript
-- Frontend: React + TypeScript + Vite + Tailwind CSS
+This repository contains a full-stack notes application with authentication, note CRUD operations, pagination, and a minimal frontend.
 
 ## Project Structure
 
-- `backend/`: API server and auth middleware
-- `frontend/`: client UI for login, note creation, and paginated note listing
+- backend: Express API server and middleware
+- frontend: React client application
+
+## Features
+
+- Simple username login with JWT token generation
+- Protected create, update, and delete note operations
+- Public note listing with pagination
+- Note detail viewing and editing modal
+- Responsive minimal UI with icon-based visual hierarchy
 
 ## Prerequisites
 
 - Node.js 18+
 - npm 9+
 
-## Environment Variables (Backend)
+## Environment Setup
 
-Create `backend/.env` using this template:
+Create `backend/.env` using the same keys as `backend/.env.example`:
 
-```env
-PORT=3000
-POCKETHOST_URL=POCKETHOST_URL_HERE
-SECRET_TOKEN=YOUR_SUPER_SECRET_TOKEN_HERE
-JWT_SECRET=YOUR_JWT_SECRET_HERE
-USER_ID=YOUR_USER_ID_HERE
-```
+- `POCKETHOST_URL`: Notes collection endpoint URL
+- `SECRET_TOKEN`: PocketHost auth token used by backend
+- `JWT_SECRET`: Secret used to sign/verify login tokens
+- `USER_ID`: User ID used when creating/updating notes
+- `PORT`: Optional backend port (default: `3000`)
 
-Important:
-- `SECRET_TOKEN` is used by backend requests sent to PocketHost.
-- `JWT_SECRET` is used by backend login and auth middleware for JWT signing/verification.
+## Install Dependencies
 
-## Installation
-
-### 1. Install backend dependencies
+From the repository root:
 
 ```bash
-cd backend
-npm install
+cd backend && npm install
+cd ../frontend && npm install
 ```
 
-### 2. Install frontend dependencies
+## Run the Application (Development)
 
-```bash
-cd ../frontend
-npm install
-```
-
-## Run the Project
-
-Open two terminals.
-
-### Terminal A: Start backend
+1. Start backend:
 
 ```bash
 cd backend
 npm run dev
 ```
 
-Backend runs at `http://localhost:3000`.
-
-### Terminal B: Start frontend
+2. Start frontend in a second terminal:
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-Frontend runs at Vite default URL (usually `http://localhost:5173`).
+3. Open the frontend URL shown by Vite (usually `http://localhost:5173`).
 
-## Build Commands
+## Build for Production
 
-### Backend build
+Backend:
 
 ```bash
 cd backend
 npm run build
+npm start
 ```
 
-### Frontend build
+Frontend:
 
 ```bash
 cd frontend
 npm run build
+npm run preview
 ```
 
-## API Overview
+## API Endpoints
 
 Base URL: `http://localhost:3000/api`
 
-### Auth
-
 - `POST /login`
-  - Body:
-  ```json
-  {
-    "username": "your_name"
-  }
-  ```
-  - Returns JWT token signed on backend.
-
-### Notes
+  - Request body: `{ "username": "string" }`
+  - Response: `{ "token": "jwt" }`
 
 - `GET /notes?page=1`
-  - Returns paginated notes (`page`, `totalPages`, `totalItems`, `items`) sorted by newest (`sort=-created`).
+  - Public endpoint
+  - Returns paginated notes
 
-- `POST /notes` (requires Authorization header)
-  - Header:
-  - `Authorization: Bearer <token>`
-  - Body:
-  ```json
-  {
-    "title": "My title",
-    "content": "My content"
-  }
-  ```
+- `POST /notes`
+  - Protected endpoint
+  - Header: `Authorization: Bearer <jwt>`
+  - Request body: `{ "title": "string", "content": "string" }`
 
 - `GET /notes/:id`
-  - Returns one note by id.
+  - Public endpoint
+  - Returns note detail by ID
 
-- `PATCH /notes/:id` (requires Authorization header)
-  - Body:
-  ```json
-  {
-    "title": "Updated title",
-    "content": "Updated content"
-  }
-  ```
+- `PATCH /notes/:id`
+  - Protected endpoint
+  - Header: `Authorization: Bearer <jwt>`
+  - Request body: `{ "title": "string", "content": "string" }`
 
-- `DELETE /notes/:id` (requires Authorization header)
-  - Deletes a note by id.
+- `DELETE /notes/:id`
+  - Protected endpoint
+  - Header: `Authorization: Bearer <jwt>`
+
+## Notes
+
+- The frontend reads API base URL from `VITE_API_BASE_URL` and falls back to `http://localhost:3000/api`.
+- The backend currently allows CORS from any origin for development.
+- Login accepts any non-empty username and returns a signed JWT.
